@@ -1,0 +1,8 @@
+USF	Starbucks	Stadium	Library	RecCenter	Parking
+USF	Starbucks	0.27 mi
+USF	Stadium	1.8 mi
+USF	Library	0.5 mi
+Starbucks	RecCenter	0.6 mi
+Library	RecCenter	0.3 mi
+RecCenter	Stadium	1.2 mi
+Library	Parking	0.4 mi
