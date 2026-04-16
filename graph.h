@@ -2,6 +2,7 @@
 #include <string>
 #include <list>
 #include "vertex.h"
+#include "utils.h"
 #include <fstream>
 #include <sstream>
 
@@ -11,28 +12,6 @@ private:
     // Store vertices in a list. Graph does not need a destructor since the list handles the lifetime.
     std::list<Vertex> verticesList;
     std::list<Edge> edgesList;
-
-    // Find a vertex by it's label else return null
-    Vertex *findVertex(const std::string &label)
-    {
-        for (Vertex &v : verticesList)
-        {
-            if (v.label == label)
-                return &v;
-        }
-        return nullptr;
-    }
-
-    // Find an edge by it's label else return null
-    Edge *findEdge(const std::string &label)
-    {
-        for (Edge &e : edgesList)
-        {
-            if (e.label == label)
-                return &e;
-        }
-        return nullptr;
-    }
 
 public:
     // Transfer ownership of the vertices to the Graph class
@@ -114,6 +93,28 @@ public:
         return ptrs;
     }
 
+    // Find a vertex by it's label else return null (case-insensitive)
+    Vertex *findVertex(const std::string &label)
+    {
+        for (Vertex &v : verticesList)
+        {
+            if (toLower(v.label) == toLower(label))
+                return &v;
+        }
+        return nullptr;
+    }
+
+    // Find an edge by it's label else return null
+    Edge *findEdge(const std::string &label)
+    {
+        for (Edge &e : edgesList)
+        {
+            if (e.label == label)
+                return &e;
+        }
+        return nullptr;
+    }
+
     // Inserts a new vertex with the given label into the graph
     void insertVertex(std::string label)
     {
@@ -129,7 +130,7 @@ public:
 
         // Remove all edges where this vertex is an endpoint
         edgesList.remove_if([lookupVertex](const Edge &e)
-                            { return e.getU() == lookupVertex || e.getV() == lookupVertex; });
+                            { return e.u == lookupVertex || e.v == lookupVertex; });
 
         // Remove the vertex
         verticesList.remove_if([lookupVertex](const Vertex &vert)
@@ -137,8 +138,7 @@ public:
         return true;
     }
 
-
-    // Inserts a new edge between vertices u and v with the given label, and registers it on both vertices
+    // Inserts a new edge between vertices u and v with the given label and registers it on both vertices
     void insertEdge(std::string label, Vertex &u, Vertex &v)
     {
         edgesList.push_back(Edge(label, &u, &v));
@@ -156,10 +156,11 @@ public:
             return false;
 
         // Remove the edge from the edgeList of every vertex that references it
-        for (Vertex &v: verticesList) {
+        for (Vertex &v : verticesList)
+        {
             v.removeEdge(lookupEdge);
         }
-        
+
         // Remove the edge by comparing its address to the looked up edge
         edgesList.remove_if([lookupEdge](const Edge &e)
                             { return &e == lookupEdge; });
@@ -167,4 +168,41 @@ public:
         return true;
     }
 
+    // Recursively finds path from current to target using DFS (visited is passed by value so each branch has its own copy/path)
+    std::list<Vertex *> findPath(Vertex *current, Vertex *target, std::list<Vertex *> visited)
+    {
+        // Initially the current vertex
+        visited.push_back(current);
+
+        // Current == target means path found
+        if (current == target)
+            return visited;
+
+        for (Edge *e : current->incidentEdges())
+        {
+            // Neighboring vertex to current
+            Vertex *neighbor = e->opposite(current);
+
+            // Skip visited vertices (If it is a nieghbor of a visited vertex, we already checked it in a prev function call)
+            bool seen = false;
+            for (Vertex *v : visited)
+            {
+                if (v == neighbor)
+                {
+                    seen = true;
+                    break;
+                }
+            }
+            if (seen)
+                continue;
+
+            // Recurse into the neighbor, if a path is found return it
+            std::list<Vertex *> result = findPath(neighbor, target, visited);
+            if (!result.empty())
+                return result;
+        }
+
+        // No path found
+        return {};
+    }
 };

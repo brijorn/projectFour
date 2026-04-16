@@ -1,7 +1,7 @@
 #pragma once
 #include <list>
 #include <string>
-
+#include <utility>
 class Edge;
 
 class Vertex
@@ -32,14 +32,8 @@ public:
         return ptrs;
     }
 
-    // Returns true if this vertex shares an edge with v
-    bool isAdjacentTo(Vertex *v)
-    {
-        for (Edge *e : edgeList)
-            if (e->getU() == v || e->getV() == v)
-                return true;
-        return false;
-    }
+    // Returns true if this vertex shares an edge with v (defined after Edge)
+    bool isAdjacentTo(Vertex *v);
 
     // Registers an edge as incident on this vertex
     void addEdge(Edge *e)
@@ -57,19 +51,11 @@ public:
 
 class Edge
 {
-private:
-    Vertex *u;
-    Vertex *v;
-
 public:
     std::string label;
+    Vertex *u;
+    Vertex *v;
     Edge(std::string label, Vertex *u, Vertex *v) : label(label), u(u), v(v) {}
-
-    // Returns the u endpoint of this edge
-    Vertex *getU() const { return u; }
-
-    // Returns the v endpoint of this edge
-    Vertex *getV() const { return v; }
 
     // Returns the label stored on this edge
     std::string operator*()
@@ -99,3 +85,12 @@ public:
         return target == u || target == v;
     }
 };
+
+// Defined after Edge so e->u and e->v are accessible
+inline bool Vertex::isAdjacentTo(Vertex *v)
+{
+    for (Edge *e : edgeList)
+        if (e->u == v || e->v == v)
+            return true;
+    return false;
+}
